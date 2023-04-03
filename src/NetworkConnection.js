@@ -2,7 +2,6 @@
 var ReservedDataType = { Update: 'u', UpdateMulti: 'um', Remove: 'r' };
 
 class NetworkConnection {
-
   constructor(networkEntities) {
     this.entities = networkEntities;
     this.setupDefaultDataSubscriptions();
@@ -18,14 +17,11 @@ class NetworkConnection {
   setupDefaultDataSubscriptions() {
     this.dataChannelSubs = {};
 
-    this.dataChannelSubs[ReservedDataType.Update]
-        = this.entities.updateEntity.bind(this.entities);
+    this.dataChannelSubs[ReservedDataType.Update] = this.entities.updateEntity.bind(this.entities);
 
-    this.dataChannelSubs[ReservedDataType.UpdateMulti]
-        = this.entities.updateEntityMulti.bind(this.entities);
+    this.dataChannelSubs[ReservedDataType.UpdateMulti] = this.entities.updateEntityMulti.bind(this.entities);
 
-    this.dataChannelSubs[ReservedDataType.Remove]
-        = this.entities.removeRemoteEntity.bind(this.entities);
+    this.dataChannelSubs[ReservedDataType.Remove] = this.entities.removeRemoteEntity.bind(this.entities);
   }
 
   connect(serverUrl, appName, roomName, enableAudio = false, enableVideo = false) {
@@ -43,10 +39,7 @@ class NetworkConnection {
     };
     this.adapter.setWebRtcOptions(webrtcOptions);
 
-    this.adapter.setServerConnectListeners(
-      this.connectSuccess.bind(this),
-      this.connectFailure.bind(this)
-    );
+    this.adapter.setServerConnectListeners(this.connectSuccess.bind(this), this.connectFailure.bind(this));
     this.adapter.setDataChannelListeners(
       this.dataChannelOpen.bind(this),
       this.dataChannelClosed.bind(this),
@@ -63,7 +56,7 @@ class NetworkConnection {
     if (this.isConnected()) {
       callback();
     } else {
-      document.body.addEventListener('connected', callback, false);
+      window.top.document.body.addEventListener('connected', callback, false);
     }
   }
 
@@ -71,12 +64,13 @@ class NetworkConnection {
     NAF.log.write('Networked-Aframe Client ID:', clientId);
     NAF.clientId = clientId;
 
-    var evt = new CustomEvent('connected', {'detail': { clientId: clientId }});
-    document.body.dispatchEvent(evt);
+    var evt = new CustomEvent('connected', { detail: { clientId: clientId } });
+    window.top.document.body.dispatchEvent(evt);
   }
 
   connectFailure(errorCode, message) {
-    NAF.log.error(errorCode, "failure to connect");
+    console.log('FAIL', errorCode, message);
+    NAF.log.error(errorCode, 'failure to connect');
   }
 
   occupantsReceived(occupantList) {
@@ -132,8 +126,8 @@ class NetworkConnection {
     this.activeDataChannels[clientId] = true;
     this.entities.completeSync(clientId, true);
 
-    var evt = new CustomEvent('clientConnected', {detail: {clientId: clientId}});
-    document.body.dispatchEvent(evt);
+    var evt = new CustomEvent('clientConnected', { detail: { clientId: clientId } });
+    window.top.document.body.dispatchEvent(evt);
   }
 
   dataChannelClosed(clientId) {
@@ -141,8 +135,8 @@ class NetworkConnection {
     this.activeDataChannels[clientId] = false;
     this.entities.removeEntitiesOfClient(clientId);
 
-    var evt = new CustomEvent('clientDisconnected', {detail: {clientId: clientId}});
-    document.body.dispatchEvent(evt);
+    var evt = new CustomEvent('clientDisconnected', { detail: { clientId: clientId } });
+    window.top.document.body.dispatchEvent(evt);
   }
 
   hasActiveDataChannel(clientId) {
@@ -175,7 +169,9 @@ class NetworkConnection {
 
   subscribeToDataChannel(dataType, callback) {
     if (this.isReservedDataType(dataType)) {
-      NAF.log.error('NetworkConnection@subscribeToDataChannel: ' + dataType + ' is a reserved dataType. Choose another');
+      NAF.log.error(
+        'NetworkConnection@subscribeToDataChannel: ' + dataType + ' is a reserved dataType. Choose another'
+      );
       return;
     }
     this.dataChannelSubs[dataType] = callback;
@@ -183,22 +179,25 @@ class NetworkConnection {
 
   unsubscribeToDataChannel(dataType) {
     if (this.isReservedDataType(dataType)) {
-      NAF.log.error('NetworkConnection@unsubscribeToDataChannel: ' + dataType + ' is a reserved dataType. Choose another');
+      NAF.log.error(
+        'NetworkConnection@unsubscribeToDataChannel: ' + dataType + ' is a reserved dataType. Choose another'
+      );
       return;
     }
     delete this.dataChannelSubs[dataType];
   }
 
   isReservedDataType(dataType) {
-    return dataType == ReservedDataType.Update
-        || dataType == ReservedDataType.Remove;
+    return dataType == ReservedDataType.Update || dataType == ReservedDataType.Remove;
   }
 
   receivedData(fromClientId, dataType, data, source) {
     if (this.dataChannelSubs[dataType]) {
       this.dataChannelSubs[dataType](fromClientId, dataType, data, source);
     } else {
-      NAF.log.write('NetworkConnection@receivedData: ' + dataType + ' has not been subscribed to yet. Call subscribeToDataChannel()');
+      NAF.log.write(
+        'NetworkConnection@receivedData: ' + dataType + ' has not been subscribed to yet. Call subscribeToDataChannel()'
+      );
     }
   }
 
@@ -222,7 +221,7 @@ class NetworkConnection {
 
     this.setupDefaultDataSubscriptions();
 
-    document.body.removeEventListener('connected', this.onConnectCallback);
+    window.top.document.body.removeEventListener('connected', this.onConnectCallback);
   }
 }
 

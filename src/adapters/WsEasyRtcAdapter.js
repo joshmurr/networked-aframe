@@ -2,7 +2,6 @@
 const NoOpAdapter = require('./NoOpAdapter');
 
 class WsEasyRtcInterface extends NoOpAdapter {
-
   constructor(easyrtc) {
     super();
 
@@ -40,8 +39,8 @@ class WsEasyRtcInterface extends NoOpAdapter {
     this.connectFailure = failureListener;
   }
 
-  setRoomOccupantListener(occupantListener){
-    this.easyrtc.setRoomOccupantListener(function(roomName, occupants, primary) {
+  setRoomOccupantListener(occupantListener) {
+    this.easyrtc.setRoomOccupantListener(function (roomName, occupants, primary) {
       occupantListener(occupants);
     });
   }
@@ -55,12 +54,12 @@ class WsEasyRtcInterface extends NoOpAdapter {
   updateTimeOffset() {
     const clientSentTime = Date.now() + this.avgTimeOffset;
 
-    return fetch(document.location.href, { method: "HEAD", cache: "no-cache" })
-      .then(res => {
+    return fetch(document.location.origin, { method: 'HEAD', cache: 'no-cache' })
+      .then((res) => {
         var precision = 1000;
-        var serverReceivedTime = new Date(res.headers.get("Date")).getTime() + (precision / 2);
+        var serverReceivedTime = new Date(res.headers.get('Date')).getTime() + precision / 2;
         var clientReceivedTime = Date.now();
-        var serverTime = serverReceivedTime + ((clientReceivedTime - clientSentTime) / 2);
+        var serverTime = serverReceivedTime + (clientReceivedTime - clientSentTime) / 2;
         var timeOffset = serverTime - clientReceivedTime;
 
         this.serverTimeRequests++;
@@ -71,14 +70,15 @@ class WsEasyRtcInterface extends NoOpAdapter {
           this.timeOffsets[this.serverTimeRequests % 10] = timeOffset;
         }
 
-        this.avgTimeOffset = this.timeOffsets.reduce((acc, offset) => acc += offset, 0) / this.timeOffsets.length;
+        this.avgTimeOffset = this.timeOffsets.reduce((acc, offset) => (acc += offset), 0) / this.timeOffsets.length;
 
         if (this.serverTimeRequests > 10) {
           setTimeout(() => this.updateTimeOffset(), 5 * 60 * 1000); // Sync clock every 5 minutes.
         } else {
           this.updateTimeOffset();
         }
-      });
+      })
+      .catch((err) => console.log(err));
   }
 
   connect() {
@@ -87,9 +87,11 @@ class WsEasyRtcInterface extends NoOpAdapter {
       new Promise((resolve, reject) => {
         this.easyrtc.connect(this.app, resolve, reject);
       })
-    ]).then(([_, clientId]) => {
-      this.connectSuccess(clientId);
-    }).catch(this.connectFailure);
+    ])
+      .then(([_, clientId]) => {
+        this.connectSuccess(clientId);
+      })
+      .catch(this.connectFailure);
   }
 
   shouldStartConnectionTo(clientId) {
@@ -118,7 +120,7 @@ class WsEasyRtcInterface extends NoOpAdapter {
   }
 
   broadcastData(dataType, data) {
-    var destination = {targetRoom: this.room};
+    var destination = { targetRoom: this.room };
     this.easyrtc.sendDataWS(destination, dataType, data);
   }
 

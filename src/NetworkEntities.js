@@ -2,7 +2,6 @@
 var ChildEntityCache = require('./ChildEntityCache');
 
 class NetworkEntities {
-
   constructor() {
     this.entities = {};
     this.childCache = new ChildEntityCache();
@@ -155,11 +154,11 @@ class NetworkEntities {
   removeEntitiesOfClient(clientId) {
     const removedEntities = [];
     for (var id in this.entities) {
-      const entity = this.entities[id]
+      const entity = this.entities[id];
       const creator = NAF.utils.getCreator(entity);
       const owner = NAF.utils.getNetworkOwner(entity);
       if (creator === clientId || (!creator && owner === clientId)) {
-        const component = this.entities[id].getAttribute("networked")
+        const component = this.entities[id].getAttribute('networked');
         if (component && component.persistent) {
           // everyone will attempt to take ownership, someone will win, it does not particularly matter who
           NAF.utils.takeOwnership(entity);
@@ -185,16 +184,16 @@ class NetworkEntities {
     }
   }
 
-  forgetEntity(id){
+  forgetEntity(id) {
     delete this.entities[id];
     this.forgetPersistentFirstSync(id);
   }
 
-  getPersistentFirstSync(id){
+  getPersistentFirstSync(id) {
     return this._persistentFirstSyncs[id];
   }
 
-  forgetPersistentFirstSync(id){
+  forgetPersistentFirstSync(id) {
     delete this._persistentFirstSyncs[id];
   }
 
